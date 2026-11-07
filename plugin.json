@@ -1,0 +1,22 @@
+{
+  "id": "neodex.joyaux",
+  "name": "Joyaux",
+  "version": "1.0.0",
+  "author": "NDesumeur",
+  "description": "Échange deux pierres voisines pour en aligner trois ou plus de la même sorte. Les chaînes en cascade multiplient les points ; 25 coups par partie.",
+  "icon": "icon.png",
+  "entry": "index.js",
+  "view": "joyaux",
+  "neobase": ">=4.0.0",
+  "type": "app",
+  "category": "Jeux",
+  "syncMode": "progression",
+  "syncInfo": "Meilleur score.",
+  "mobile": false,
+  "system": false,
+  "dependencies": {},
+  "sdk": "2.1.0",
+  "permissions": [
+    "storage"
+  ]
+}
