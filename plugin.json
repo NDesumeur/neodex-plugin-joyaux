@@ -1,7 +1,7 @@
 {
   "id": "neodex.joyaux",
   "name": "Joyaux",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "NDesumeur",
   "description": "Jeu d'alignement : échange deux pierres voisines, au clic ou en glissant, pour en aligner trois ou plus de la même sorte. Elles disparaissent, les autres tombent, et chaque alignement en cascade multiplie les points. 25 coups par partie, un échange inutile ne coûte rien, le plateau se mélange s'il est bloqué, et chaque pierre a sa forme pour se passer des couleurs.",
   "icon": "icon.png",
