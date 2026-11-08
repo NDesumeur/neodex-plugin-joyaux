@@ -3,7 +3,7 @@
   "name": "Joyaux",
   "version": "1.0.0",
   "author": "NDesumeur",
-  "description": "Échange deux pierres voisines pour en aligner trois ou plus de la même sorte. Les chaînes en cascade multiplient les points ; 25 coups par partie.",
+  "description": "Jeu d'alignement : échange deux pierres voisines, au clic ou en glissant, pour en aligner trois ou plus de la même sorte. Elles disparaissent, les autres tombent, et chaque alignement en cascade multiplie les points. 25 coups par partie, un échange inutile ne coûte rien, le plateau se mélange s'il est bloqué, et chaque pierre a sa forme pour se passer des couleurs.",
   "icon": "icon.png",
   "entry": "index.js",
   "view": "joyaux",
