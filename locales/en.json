@@ -1,4 +1,6 @@
 {
+ "4 pierres alignées : une bombe, qui explose en 3 × 3 quand on l'aligne à son tour.": "Line up 4 stones: a bomb, which blows up 3 × 3 when it is lined up in turn.",
+ "5 pierres alignées : une étoile ; échange-la avec une pierre pour effacer toute sa couleur.": "5 stones in a row: a star; swap it with a stone to clear its whole colour.",
  "Aa": "Aa",
  "Ac": "Ac",
  "Ad": "Ad",
@@ -18,7 +20,7 @@
  "Ic": "Ic",
  "Id": "ID",
  "JOYAUX": "JEWELS",
- "Jeu d'alignement : échange deux pierres voisines, au clic ou en glissant, pour en aligner trois ou plus de la même sorte. Elles disparaissent, les autres tombent, et chaque alignement en cascade multiplie les points. 25 coups par partie, un échange inutile ne coûte rien, le plateau se mélange s'il est bloqué, et chaque pierre a sa forme pour se passer des couleurs.": "A matching game: swap two neighbouring stones, by click or drag, to line up three or more of the same kind. They vanish, the others fall, and each cascading match multiplies the points. 25 moves per game, a useless swap costs nothing, the board shuffles when stuck, and each stone has its own shape so colour is not needed.",
+ "Jeu d'alignement : échange deux pierres voisines, au clic ou en glissant, pour en aligner trois ou plus de la même sorte. Elles disparaissent, les autres tombent, et chaque alignement en cascade multiplie les points. 25 coups par partie, un échange inutile ne coûte rien, le plateau se mélange s'il est bloqué, et chaque pierre a sa forme pour se passer des couleurs. Aligne 4 pierres pour une bombe qui explose en 3 × 3, 5 pour une étoile qui efface toute une couleur. Les pierres brillent, le jeu prend la taille de l'écran et passe en plein écran.": "A matching game: swap two neighbouring stones, by click or drag, to line up three or more of the same kind. They vanish, the others fall, and each cascading match multiplies the points. 25 moves per game, a useless swap costs nothing, the board shuffles when stuck, and each stone has its own shape so colour is not needed. Line up 4 stones for a bomb that blows up 3 × 3, 5 for a star that clears a whole colour. The stones sparkle, the game fits the screen and goes full screen.",
  "Joyaux": "Jewels",
  "KAAKHDDDDDDDKSSK": "KAAKHDDDDDDDKSSK",
  "KAAKHHHHHHHHKSSK": "KAAKHHHHHHHHKSSK",
@@ -50,6 +52,7 @@
  "Oa": "Oh",
  "Oc": "Oc",
  "Od": "Od",
+ "PLEIN ÉCRAN": "FULL SCREEN",
  "Parties": "Parts",
  "RECORDS": "RECORDS",
  "Ua": "Ua",

@@ -9,6 +9,7 @@ A gem-matching game: swap two neighbouring stones to line up three or more of th
 - **Click a stone** then **its neighbour** (left, right, above or below) to swap them.
 - Or **drag** a stone towards its neighbour.
 - **New game** starts over.
+- **Full screen**: the button of the same name; Escape to leave it. Otherwise the board takes all the room the window leaves.
 
 ## Rules
 
@@ -17,6 +18,13 @@ A gem-matching game: swap two neighbouring stones to line up three or more of th
 - Matched stones vanish, those above fall and new ones come in from the top. If they form new matches in turn, that is a **chain**.
 - If no swap is possible any more, the board is shuffled by itself.
 - After the 25th move (and the end of the chains), the game ends.
+
+## Special stones
+
+- **Bomb**: line up **4 stones** alike; where you swapped stays a stone with a small blinking bomb. When it is lined up in turn, it **blows up** and clears the 3 × 3 cells around it (setting off any other bombs caught in it).
+- **Star**: line up **5 stones**; a six-coloured star stays. **Swap it** with any stone: every stone of that colour disappears. Two stars swapped together clear the whole board.
+- Each bomb or star that goes off earns **50 more points**, with a shake and a big flash.
+- Now and then a **sparkle** shines on a stone.
 
 ## Points
 

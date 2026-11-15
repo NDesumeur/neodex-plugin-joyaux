@@ -2,11 +2,11 @@
 // Jeu NeoDex en pixel art dessiné à la main (police bitmap, cadres et boutons en pixels). Il tourne dans le bac à sable de NeoDex.
 const HTML = `<div class="appWrap wide">
   <div class="agHead"><span class="label">Joyaux</span><span class="hint">Clic sur une pierre puis sur sa voisine, ou glisser</span></div>
-  <div class="gMain"><div class="gameBox"><canvas id="gc" width="168" height="182"></canvas></div>
+  <div class="gMain"><div class="gameBox"><canvas id="gc" width="168" height="182" role="img" aria-label="Plateau de Joyaux"></canvas></div>
     <div class="gSide">
       <div class="sysCard"><b>RECORDS</b><div class="gStats" id="gStats"></div></div>
-      <div class="row"><button class="btn main" id="gNew">NOUVELLE PARTIE</button></div>
-      
+      <div class="row"><button class="btn main" id="gNew">NOUVELLE PARTIE</button><button class="btn" id="gFs">PLEIN ÉCRAN</button></div>
+      <div class="hint">4 pierres alignées : une bombe, qui explose en 3 × 3 quand on l'aligne à son tour.</div><div class="hint">5 pierres alignées : une étoile ; échange-la avec une pierre pour effacer toute sa couleur.</div>
       <div class="hint">Un échange qui n'aligne rien est annulé et ne coûte pas de coup.</div><div class="hint">Chaque pierre a sa forme : on les reconnaît même sans les couleurs.</div>
     </div></div>
 </div>`;
@@ -17,7 +17,9 @@ const CSS = `.gMain{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
 .gSide .sysCard{display:flex;flex-direction:column}
 .gStats{display:grid;grid-template-columns:1fr auto;gap:4px 14px}
 .gStats b{text-align:right}
-.gameBox canvas{max-width:440px;aspect-ratio:168/182}`;
+.gameBox canvas{width:min(100%,max(300px,calc((100vh - 190px) * 168 / 182)));height:auto;aspect-ratio:168/182}
+.gameBox:fullscreen{padding:0}
+.gameBox:fullscreen canvas{width:min(100vw,calc(100vh * 168 / 182))}`;
 /* ---------- l'habillage pixel art, dessiné à la main : police bitmap (accents compris), cadres, boutons, icônes ----------
    Tout est en pixels pleins, agrandis par 2 sans lissage : aucun dégradé, aucune ombre floue. */
 const PXK = (() => {
@@ -340,46 +342,79 @@ const JY_GEM = [  // six pierres taillées à la main, chacune sa forme (on les 
   [['....kkkkk.....', '..kkLLaaakk...', '.kLLaaaaaaak..', '.kLaaaaaaaak..', 'kLaaaaaaaaaak.', 'kaaaaawaaaaak.', 'kaaaaaaaaaaDk.', 'kaaaaaaaaaaDk.', '.kaaaaaaaaDk..', '.kaaaaaaaDDk..', '..kkaaaDDkk...', '....kkkkk.....'], '#b07aff'],
   [['.....kkk......', '....kLLak.....', '...kLaaaak....', '..kLaaaaaak...', '.kLaaaaaaaak..', 'kLaaaaaaaaaak.', 'kkkkkkkkkkkkk.', '.kaaaaaaaaDk..', '..kaaaaaaDk...', '...kaaaaDk....', '....kaaDk.....', '.....kkk......'], '#ff9a3d'],
 ].map(([rows, c]) => spr(rows, {...JY_P, a: c, L: '#' + [1, 3, 5].map(i => Math.min(255, Math.round(parseInt(c.slice(i, i + 2), 16) * 1.4 + 40)).toString(16).padStart(2, '0')).join(''), D: '#' + [1, 3, 5].map(i => Math.round(parseInt(c.slice(i, i + 2), 16) * .5).toString(16).padStart(2, '0')).join('')}));
+const JY_COL = ['#ff4a5a', '#ff9a3d', '#ffd84a', '#5fdf6a', '#3f8aff', '#b07aff'];
+const JY_STAR = JY_COL.map((_, sh) => cnv(14, 12, b => ['......k.......', '.....kwk......', '....kwaak.....', '...kwaaaak....', 'kkkwaaaaaakkk.', 'kwaaaaaaaaaak.', '.kaaaaaaaaak..', '..kaaaaaaak...', '..kaaakaaak...', '.kaaak.kaaak..', '.kakk...kkak..', '.kk.......kk..'].forEach((r, y) => [...r].forEach((ch, x) => { if (ch !== '.') px(b, ch === 'k' ? '#05010b' : ch === 'w' ? '#ffffff' : JY_COL[(((x + y) >> 1) + sh) % 6], x, y); }))));
+const JY_BOMB = spr(['...o.', '..k..', '.kkk.', 'kkwkk', 'kkkkk', '.kkk.'], {k: '#05010b', w: '#c8c0d8', o: '#ffd84a'});
 const jys = gstore('joyaux', {games: 0});
 let jy = null;
 const jyRand = () => Math.floor(Math.random() * 6);
-function jyMatches(b) {  // -> ensemble des cases alignées par trois ou plus
-  const out = new Set();
+function jyRuns(b) {  // -> les suites de trois pierres pareilles ou plus, chacune entière (pour repérer celles de 4 et de 5)
+  const runs = [];
   for (let y = 0; y < JY.N; y++) for (let x = 0; x < JY.N; x++) for (const [dx, dy] of [[1, 0], [0, 1]]) {
-    const c = b[y][x]; if (c < 0) continue; let n = 1; while (b[y + dy * n]?.[x + dx * n] === c) n++;
-    if (n >= 3) for (let i = 0; i < n; i++) out.add((x + dx * i) + ',' + (y + dy * i));
+    const c = b[y][x]; if (c < 0 || c > 5 || b[y - dy]?.[x - dx] === c) continue; let n = 1; while (b[y + dy * n]?.[x + dx * n] === c) n++;
+    if (n >= 3) runs.push({c, cells: Array.from({length: n}, (_, i) => (x + dx * i) + ',' + (y + dy * i))});
+  }
+  return runs;
+}
+const jyMatches = b => new Set(jyRuns(b).flatMap(r => r.cells));
+const jyColor = (b, c) => { const o = []; for (let y = 0; y < JY.N; y++) for (let x = 0; x < JY.N; x++) if (b[y][x] === c) o.push(x + ',' + y); return o; };
+function jyBlast(b, sp, cells) {  // ajoute aux cases effacées ce que font les bombes prises dedans (3 × 3, en chaîne) et les étoiles (leur couleur la plus présente)
+  const out = new Set(cells), q = [...cells];
+  while (q.length) {
+    const [x, y] = q.pop().split(',').map(Number); let add = [];
+    if (sp[y][x] === 'B') { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (b[y + j]?.[x + i] != null) add.push((x + i) + ',' + (y + j)); }
+    else if (b[y][x] === 6) { const n = [0, 1, 2, 3, 4, 5].map(c => jyColor(b, c).length); add = jyColor(b, n.indexOf(Math.max(...n))); }
+    for (const k of add) if (!out.has(k)) { out.add(k); q.push(k); }
   }
   return out;
 }
-function jyHasMove(b) { for (let y = 0; y < JY.N; y++) for (let x = 0; x < JY.N; x++) for (const [dx, dy] of [[1, 0], [0, 1]]) { const a = x + dx, c = y + dy; if (a >= JY.N || c >= JY.N) continue; const t = b.map(r => r.slice()); [t[y][x], t[c][a]] = [t[c][a], t[y][x]]; if (jyMatches(t).size) return true; } return false; }
+const jyStar = (b, x, y, a, c) => { const u = b[y][x], v = b[c][a]; return u === 6 && v === 6 ? jyColor(b, 6).concat(...[0, 1, 2, 3, 4, 5].map(k => jyColor(b, k))) : [x + ',' + y, a + ',' + c].concat(jyColor(b, u === 6 ? v : u)); };  // l'étoile échangée efface toute la couleur de l'autre pierre
+function jyHasMove(b) { if (b.some(r => r.includes(6))) return true; for (let y = 0; y < JY.N; y++) for (let x = 0; x < JY.N; x++) for (const [dx, dy] of [[1, 0], [0, 1]]) { const a = x + dx, c = y + dy; if (a >= JY.N || c >= JY.N) continue; const t = b.map(r => r.slice()); [t[y][x], t[c][a]] = [t[c][a], t[y][x]]; if (jyMatches(t).size) return true; } return false; }
 function jyBoard() { let b; do { b = Array.from({length: JY.N}, () => Array.from({length: JY.N}, jyRand)); while (jyMatches(b).size) for (const k of jyMatches(b)) { const [x, y] = k.split(',').map(Number); b[y][x] = jyRand(); } } while (!jyHasMove(b)); return b; }
-function jyNew() { jy = Object.assign(jy || {tick: 0, raf: 0}, {mode: 'play', b: jyBoard(), off: Array.from({length: JY.N}, () => Array(JY.N).fill(0)), sel: null, moves: JY.MOVES, score: 0, chain: 0, busy: 0, swap: null, pops: [], endAt: 0, drag: null}); jyInfo(); }
+function jyNew() { jy = Object.assign(jy || {tick: 0, raf: 0}, {mode: 'play', b: jyBoard(), sp: Array.from({length: JY.N}, () => Array(JY.N).fill(0)), booms: [], force: null, last: null, off: Array.from({length: JY.N}, () => Array(JY.N).fill(0)), sel: null, moves: JY.MOVES, score: 0, chain: 0, busy: 0, swap: null, pops: [], endAt: 0, drag: null}); jyInfo(); }
 function jyTry(x, y, a, c) {
-  if (jy.busy || jy.mode !== 'play') return; const b = jy.b; [b[y][x], b[c][a]] = [b[c][a], b[y][x]];
-  jy.swap = {x, y, a, c, t: 0, back: !jyMatches(b).size}; jy.busy = 1; jy.sel = null; beep(520, .03, 'square', 0, .04);
+  if (jy.busy || jy.mode !== 'play') return; const b = jy.b, sp = jy.sp, star = b[y][x] === 6 || b[c][a] === 6;
+  if (star) jy.force = jyStar(b, x, y, a, c);
+  [b[y][x], b[c][a]] = [b[c][a], b[y][x]]; [sp[y][x], sp[c][a]] = [sp[c][a], sp[y][x]]; jy.last = [x + ',' + y, a + ',' + c];
+  jy.swap = {x, y, a, c, t: 0, back: !star && !jyMatches(b).size}; jy.busy = 1; jy.sel = null; beep(520, .03, 'square', 0, .04);
 }
 function jyResolve() {  // efface les alignements, fait tomber les pierres, recommence tant qu'il y en a
-  const m = jyMatches(jy.b); if (!m.size) { jy.busy = 0; jy.chain = 0; if (jy.moves <= 0) { jy.mode = 'over'; jy.endAt = jy.tick; jys.games++; best('joyaux', jy.score); saveGames(); jyInfo(); beep(330, .4, 'triangle', 660); } else if (!jyHasMove(jy.b)) { jy.b = jyBoard(); jy.shuffle = jy.tick; } return; }
-  jy.chain++; jy.score += m.size * 10 * jy.chain; beep(600 + jy.chain * 120, .08, 'triangle', 0, .07);
-  for (const k of m) { const [x, y] = k.split(',').map(Number); jy.pops.push({x, y, c: jy.b[y][x], t: 0}); jy.b[y][x] = -1; }
-  for (let x = 0; x < JY.N; x++) { let w = JY.N - 1; for (let y = JY.N - 1; y >= 0; y--) if (jy.b[y][x] >= 0) { if (w !== y) { jy.b[w][x] = jy.b[y][x]; jy.b[y][x] = -1; jy.off[w][x] = (w - y) * JY.C; } w--; }
-    for (let y = w, k = 1; y >= 0; y--, k++) { jy.b[y][x] = jyRand(); jy.off[y][x] = (w + 1 + k - 1) * JY.C + 6; } }
+  const runs = jyRuns(jy.b); if (!runs.length && !jy.force) { jy.busy = 0; jy.chain = 0; if (jy.moves <= 0) { jy.mode = 'over'; jy.endAt = jy.tick; jys.games++; best('joyaux', jy.score); saveGames(); jyInfo(); beep(330, .4, 'triangle', 660); } else if (!jyHasMove(jy.b)) { jy.b = jyBoard(); jy.shuffle = jy.tick; } return; }
+  jy.chain++; const m = new Set(runs.flatMap(r => r.cells)), make = new Map(), star = !!jy.force;
+  for (const r of runs) if (r.cells.length >= 4) make.set(r.cells.find(k => jy.last?.includes(k)) ?? r.cells[r.cells.length >> 1], r.cells.length >= 5 ? 6 : r.c);  // 4 alignées : une bombe ; 5 : une étoile
+  for (const k of jy.force || []) { m.add(k); const [x, y] = k.split(',').map(Number); if (jy.b[y][x] === 6) jy.b[y][x] = 7; }  // l'étoile échangée est dépensée
+  jy.force = null; jy.last = null;
+  for (const k of make.keys()) m.delete(k);
+  const all = jyBlast(jy.b, jy.sp, m); for (const k of make.keys()) all.delete(k);
+  let booms = 0; for (const k of all) { const [x, y] = k.split(',').map(Number); if (jy.sp[y][x] === 'B' || jy.b[y][x] >= 6) { booms++; jy.booms.push({x, y, t: 0, big: jy.b[y][x] >= 6}); } }
+  jy.score += all.size * 10 * jy.chain + booms * 50; jy.blasts = (jy.blasts || 0) + booms; beep(600 + jy.chain * 120, .08, 'triangle', 0, .07);
+  if (booms || star) { beep(90, .35, 'sawtooth', 40, .1); beep(1400, .25, 'triangle', 2400, .04); jy.shake = 8; }
+  for (const k of all) { const [x, y] = k.split(',').map(Number); jy.pops.push({x, y, c: jy.b[y][x], t: 0}); jy.b[y][x] = -1; jy.sp[y][x] = 0; }
+  for (const [k, c] of make) { const [x, y] = k.split(',').map(Number); jy.b[y][x] = c; jy.sp[y][x] = c === 6 ? 0 : 'B'; [1047, 1319, 1568].forEach((f, i) => setTimeout(() => beep(f, .1, 'square', 0, .04), 120 + i * 70)); }
+  for (let x = 0; x < JY.N; x++) { let w = JY.N - 1; for (let y = JY.N - 1; y >= 0; y--) if (jy.b[y][x] >= 0) { if (w !== y) { jy.b[w][x] = jy.b[y][x]; jy.sp[w][x] = jy.sp[y][x]; jy.b[y][x] = -1; jy.sp[y][x] = 0; jy.off[w][x] = (w - y) * JY.C; } w--; }
+    for (let y = w, k = 1; y >= 0; y--, k++) { jy.b[y][x] = jyRand(); jy.sp[y][x] = 0; jy.off[y][x] = (w + 1 + k - 1) * JY.C + 6; } }
   jy.busy = 2;
 }
 function jyUpdate() {
-  for (const p of jy.pops) p.t++; jy.pops = jy.pops.filter(p => p.t < 12);
-  const s = jy.swap; if (s && ++s.t >= 8) { if (s.back && !s.rev) { const b = jy.b; [b[s.y][s.x], b[s.c][s.a]] = [b[s.c][s.a], b[s.y][s.x]]; s.rev = true; s.t = 0; beep(200, .05, 'square', 0, .04); } else { jy.swap = null; if (s.back) jy.busy = 0; else { jy.moves--; jyResolve(); } } }
+  for (const p of jy.pops) p.t++; jy.pops = jy.pops.filter(p => p.t < 12); for (const o of jy.booms) o.t++; jy.booms = jy.booms.filter(o => o.t < 16); if (jy.shake) jy.shake--;
+  const s = jy.swap; if (s && ++s.t >= 8) { if (s.back && !s.rev) { const b = jy.b, sp = jy.sp; [b[s.y][s.x], b[s.c][s.a]] = [b[s.c][s.a], b[s.y][s.x]]; [sp[s.y][s.x], sp[s.c][s.a]] = [sp[s.c][s.a], sp[s.y][s.x]]; jy.last = null; s.rev = true; s.t = 0; beep(200, .05, 'square', 0, .04); } else { jy.swap = null; if (s.back) jy.busy = 0; else { jy.moves--; jyResolve(); } } }
   if (jy.busy === 2) { let moving = false; for (const r of jy.off) for (let x = 0; x < JY.N; x++) if (r[x] > 0) { r[x] = Math.max(0, r[x] - 3); moving = true; } if (!moving) jyResolve(); }
 }
 const JY_BG = cnv(W, H, b => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) px(b, (x + y) % 2 ? '#140a24' : '#100820', x, y); px(b, '#05010b', JY.X0 - 3, JY.Y0 - 3, JY.N * JY.C + 6, JY.N * JY.C + 6); for (let y = 0; y < JY.N; y++) for (let x = 0; x < JY.N; x++) px(b, (x + y) % 2 ? '#22163a' : '#1a1030', JY.X0 + x * JY.C, JY.Y0 + y * JY.C, JY.C, JY.C); });
 function jyDraw() {
-  g.drawImage(JY_BG, 0, 0); g.save(); g.beginPath(); g.rect(JY.X0, JY.Y0, JY.N * JY.C, JY.N * JY.C); g.clip();
+  g.drawImage(JY_BG, 0, 0); g.save(); if (jy.shake) g.translate((jy.shake & 2) - 1, (jy.shake & 1) * 2 - 1); g.beginPath(); g.rect(JY.X0, JY.Y0, JY.N * JY.C, JY.N * JY.C); g.clip();
   const s = jy.swap, k = s ? (s.rev ? 1 - s.t / 8 : s.t / 8) : 0;
   for (let y = 0; y < JY.N; y++) for (let x = 0; x < JY.N; x++) {
     const c = jy.b[y][x]; if (c < 0) continue; let X = JY.X0 + x * JY.C + 2, Y = JY.Y0 + y * JY.C + 3 - jy.off[y][x];
     if (s) { const sw = s.rev ? (x === s.x && y === s.y ? [s.a, s.c] : x === s.a && y === s.c ? [s.x, s.y] : null) : (x === s.a && y === s.c ? [s.x, s.y] : x === s.x && y === s.y ? [s.a, s.c] : null); if (sw) { X += (sw[0] - x) * JY.C * (1 - k); Y += (sw[1] - y) * JY.C * (1 - k); } }
-    const sel = jy.sel && jy.sel[0] === x && jy.sel[1] === y; g.drawImage(JY_GEM[c], Math.round(X), Math.round(Y - (sel ? Math.abs(Math.sin(jy.tick / 5)) * 2 : 0)));
+    const sel = jy.sel && jy.sel[0] === x && jy.sel[1] === y; X = Math.round(X); Y = Math.round(Y - (sel ? Math.abs(Math.sin(jy.tick / 5)) * 2 : 0));
+    if (c >= 6) { g.drawImage(JY_STAR[(jy.tick >> 3) % 6], X, Y); continue; }
+    if (jy.sp[y][x] === 'B') { if ((jy.tick >> 3) % 2) { g.globalAlpha = .22; px(g, '#ffffff', X - 1, Y - 2, 16, 16); g.globalAlpha = 1; } g.drawImage(JY_GEM[c], X, Y); g.drawImage(JY_BOMB, X + 9, Y + 7); if ((jy.tick >> 2) % 2) px(g, '#ff9a3d', X + 12, Y + 6); continue; }
+    g.drawImage(JY_GEM[c], X, Y);
+    const ph = (x * 37 + y * 91 + jy.tick) % 150; if (ph < 8 && !jy.off[y][x]) { const r = ph < 4 ? ph : 8 - ph; px(g, '#ffffff', X + 4 - r, Y + 3, r * 2 + 1, 1); px(g, '#ffffff', X + 4, Y + 3 - r, 1, r * 2 + 1); }  // l'éclat qui brille sur la pierre
   }
+  for (const o of jy.booms) { const r = 4 + o.t * (o.big ? 3 : 1.6), X = JY.X0 + o.x * JY.C + 9, Y = JY.Y0 + o.y * JY.C + 9; g.globalAlpha = Math.max(0, 1 - o.t / 16);
+    px(g, o.big ? '#ffd84a' : '#ffffff', X - r, Y - r, r * 2, 2); px(g, o.big ? '#ffd84a' : '#ffffff', X - r, Y + r - 2, r * 2, 2); px(g, o.big ? '#ffd84a' : '#ffffff', X - r, Y - r, 2, r * 2); px(g, o.big ? '#ffd84a' : '#ffffff', X + r - 2, Y - r, 2, r * 2); if (o.t < 4) px(g, '#ffffff', X - 6, Y - 6, 12, 12); g.globalAlpha = 1; }
   g.restore();
   if (jy.sel) { const X = JY.X0 + jy.sel[0] * JY.C, Y = JY.Y0 + jy.sel[1] * JY.C; px(g, '#ffffff', X, Y, JY.C, 1); px(g, '#ffffff', X, Y + JY.C - 1, JY.C, 1); px(g, '#ffffff', X, Y, 1, JY.C); px(g, '#ffffff', X + JY.C - 1, Y, 1, JY.C); }
   for (const p of jy.pops) { const k2 = p.t / 12; for (let a = 0; a < 6; a++) px(g, '#ffffff', JY.X0 + p.x * JY.C + 9 + Math.cos(a * 1.05 + p.t / 4) * k2 * 10, JY.Y0 + p.y * JY.C + 9 + Math.sin(a * 1.05 + p.t / 4) * k2 * 10, 2, 2); }
@@ -397,10 +432,18 @@ cv.onpointermove = e => { if (!jy?.drag || jy.busy) return; const c = jyCell(e);
 cv.onpointerup = () => { if (jy) jy.drag = null; };
 function jyInfo() { showStats([['Meilleur score', games.best.joyaux || 0], ['Parties', jys.games]]); }
 $('gNew').onclick = () => { jyNew(); $('gNew').blur(); };
-{  // vérification : un plateau neuf n'a aucun alignement et au moins un coup possible ; trois pareils en ligne sont trouvés
-  const b = jyBoard(), t = Array.from({length: JY.N}, (_, y) => Array.from({length: JY.N}, (_, x) => (x + y * 2) % 6)); t[3][2] = t[3][3] = t[3][4] = 5;
-  console.assert(!jyMatches(b).size && jyHasMove(b) && jyMatches(t).has('3,3'), 'joyaux');
+$('gFs').onclick = () => { const box = cv.parentElement; document.fullscreenElement ? document.exitFullscreen() : box.requestFullscreen?.().catch(() => {}); $('gFs').blur(); };
+function jyCheck() {  // vérification : plateau neuf sans alignement et jouable ; 4 alignées font une bombe, 5 une étoile ; la bombe vide 3 × 3, l'étoile une couleur
+  const bad = [], b = jyBoard(), grid = () => Array.from({length: JY.N}, (_, y) => Array.from({length: JY.N}, (_, x) => (x + y * 2) % 6)), zero = () => Array.from({length: JY.N}, () => Array(JY.N).fill(0));
+  const t = grid(); t[3][2] = t[3][3] = t[3][4] = 5; if (jyMatches(b).size || !jyHasMove(b) || !jyMatches(t).has('3,3') || jyRuns(grid()).length) bad.push('plateau');
+  const keep = jy, run = (cells, last) => { const t2 = grid(); for (const [x, y] of cells) t2[y][x] = 5; jy = {b: t2, sp: zero(), off: zero(), pops: [], booms: [], chain: 0, score: 0, last, force: null, moves: 9, mode: 'play', tick: 0}; jyResolve(); const r = jy; jy = keep; return r; };
+  const r4 = run([[0, 3], [1, 3], [2, 3], [3, 3]], ['2,3']); if (r4.sp[3][2] !== 'B' || r4.b[3][2] !== 5) bad.push('bombe');
+  const r5 = run([[0, 3], [1, 3], [2, 3], [3, 3], [4, 3]], ['2,3']); if (r5.b[3][2] !== 6) bad.push('étoile');
+  const sp = zero(); sp[4][4] = 'B'; sp[0][0] = 'B'; if (jyBlast(grid(), sp, ['4,4']).size !== 9 || jyBlast(grid(), sp, ['0,0']).size !== 4) bad.push('explosion');
+  const g2 = grid(); g2[0][0] = 6; const col = g2[0][1]; if (new Set(jyStar(g2, 0, 0, 1, 0)).size !== jyColor(g2, col).length + 1) bad.push('étoile échangée');
+  return bad.join(' | ') || 'ok';
 }
+{ const c = jyCheck(); console.assert(c === 'ok', 'joyaux', c); cv.__jy = {check: jyCheck, st: () => jy, swap: (x, y, a, c) => jyTry(x, y, a, c), again: () => jyNew()}; }
 ctx.onOpen(() => { if (!jy) jyNew(); gameLoop(jy, 'joyaux', jyUpdate, jyDraw); jyInfo(); });
 
 }

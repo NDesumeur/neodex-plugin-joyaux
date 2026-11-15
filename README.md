@@ -9,6 +9,7 @@ Un jeu d'alignement de pierres précieuses : échange deux pierres voisines pour
 - **Clic sur une pierre** puis **sur sa voisine** (à gauche, à droite, en haut ou en bas) pour les échanger.
 - Ou **glisse** une pierre vers sa voisine.
 - **Nouvelle partie** recommence.
+- **Plein écran** : le bouton du même nom ; Échap pour en sortir. Hors plein écran, le plateau prend toute la place que laisse la fenêtre.
 
 ## Règles
 
@@ -17,6 +18,13 @@ Un jeu d'alignement de pierres précieuses : échange deux pierres voisines pour
 - Les pierres alignées disparaissent, celles du dessus tombent et de nouvelles arrivent par le haut. Si elles forment à leur tour des alignements, c'est une **chaîne**.
 - S'il n'y a plus aucun échange possible, le plateau est mélangé tout seul.
 - Après le 25e coup (et la fin des chaînes), la partie s'arrête.
+
+## Pierres spéciales
+
+- **Bombe** : aligne **4 pierres** pareilles ; à l'endroit de ton échange reste une pierre avec une petite bombe, qui clignote. Quand elle est alignée à son tour, elle **explose** et efface les 3 × 3 cases autour d'elle (et fait sauter les autres bombes prises dedans).
+- **Étoile** : aligne **5 pierres** ; il reste une étoile aux six couleurs. **Échange-la** avec n'importe quelle pierre : toutes les pierres de cette couleur disparaissent. Deux étoiles échangées vident tout le plateau.
+- Chaque bombe ou étoile qui part rapporte **50 points** de plus, avec une secousse et un grand éclat.
+- De temps en temps, un **éclat** brille sur une pierre.
 
 ## Points
 
