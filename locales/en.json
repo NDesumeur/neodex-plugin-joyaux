@@ -46,7 +46,6 @@
  "KWWWWWK": "KWWWWWK",
  "KWWWWWWWWWWK": "KWWWWWWWWWWK",
  "Meilleur score": "Best score",
- "Meilleur score.": "Best score.",
  "NOUVELLE PARTIE": "NEW GAME",
  "Nt": "Nt",
  "Oa": "Oa",
@@ -63,5 +62,6 @@
  "chaîne ×": "string ×",
  "Plateau de Joyaux": "Jewels board",
  "étoile": "star",
- "étoile échangée": "star swapped"
+ "étoile échangée": "star swapped",
+ "Rien n'est synchronisé : tes records restent sur cet appareil.": "Nothing is synced: your records stay on this device."
 }
