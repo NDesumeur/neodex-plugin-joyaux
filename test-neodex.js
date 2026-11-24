@@ -25,6 +25,17 @@ module.exports = async ({ pj, sleep }) => {
   if (!(s3.score >= s2.score + st * 10) || s3.holes) throw new Error('l\'étoile devait vider une couleur : ' + JSON.stringify(s3));
   await C(`jy.moves = 1; return 0;`); const mv2 = await C(`for (let y = 0; y < 8; y++) for (let x = 0; x < 7; x++) { const t = jy.b.map(r => r.slice()); [t[y][x], t[y][x+1]] = [t[y][x+1], t[y][x]]; for (let j = 0; j < 8; j++) for (let i = 0; i < 6; i++) if (t[j][i] === t[j][i+1] && t[j][i] === t[j][i+2]) return [x, y]; for (let i = 0; i < 8; i++) for (let j = 0; j < 6; j++) if (t[j][i] === t[j+1][i] && t[j][i] === t[j+2][i]) return [x, y]; } return null;`);
   if (mv2) { await C(`T.swap(${mv2[0]}, ${mv2[1]}, ${mv2[0] + 1}, ${mv2[1]}); return 0;`); await calm(); await sleep(700); if (await C('return jy.mode;') !== 'over') throw new Error('la partie devait finir'); await shot('4-fin'); }
+  // le combat : un coup à soi, puis le monstre joue tout seul
+  await pj(`(() => { const s = document.getElementById('jyMode'); s.value = 'combat'; s.dispatchEvent(new Event('change')); return 0; })()`); await sleep(300);
+  await C(`jy.me.sh = 2; jy.me.mp = 7; jy.foe.mp = 4; return 0;`); await sleep(100); await shot('4-combat');
+  const cm = await C(`for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) for (const [dx, dy] of [[1, 0], [0, 1]]) { const a = x + dx, c = y + dy; if (a > 7 || c > 7) continue; const t = jy.b.map(r => r.slice()); [t[y][x], t[c][a]] = [t[c][a], t[y][x]]; for (let j = 0; j < 8; j++) for (let i = 0; i < 6; i++) if (t[j][i] === t[j][i+1] && t[j][i] === t[j][i+2]) return [x, y, a, c]; for (let i = 0; i < 8; i++) for (let j = 0; j < 6; j++) if (t[j][i] === t[j+1][i] && t[j][i] === t[j+2][i]) return [x, y, a, c]; } return null;`); if (!cm) throw new Error('combat : aucun coup trouvé');
+  {
+    await C(`T.swap(${cm.join(', ')}); return 0;`); await calm();
+    if (await C('return jy.turn + "|" + jy.extra;') === 'foe|false') { for (let i = 0; i < 60 && await C('return jy.turn;') === 'foe'; i++) await sleep(100); }
+    await sleep(200); await shot('5-combat-apres');
+    const ct = await C('return jy.turn + "|" + jy.mode + "|" + jy.combat;'); if (!/^me\|play\|true$/.test(ct)) throw new Error('combat : le monstre devait jouer puis rendre la main : ' + ct);
+  }
+  await pj(`(() => { const s = document.getElementById('jyMode'); s.value = 'score'; s.dispatchEvent(new Event('change')); return 0; })()`); await sleep(200);
   const errs = await pj(`window.__e.join(' | ')`); if (errs) throw new Error('erreur : ' + errs);
   await pj(`document.fullscreenElement && document.exitFullscreen(), 0`); await sleep(200);
   await pj(`document.getElementById('gFs').click(), 0`); await sleep(800);

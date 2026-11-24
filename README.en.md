@@ -4,6 +4,10 @@ A gem-matching game: swap two neighbouring stones to line up three or more of th
 
 *Version française : [README.md](README.md)*
 
+## Fight the monsters (new in 1.2.0)
+
+A new mode, like a role-playing game: you and a monster take turns on the same board. Red gems hit, green ones heal, blue ones give a shield, the others fill your magic; at 12, an 8-damage spell goes off by itself. Making a bomb or a star gives an extra turn. Six monsters, each stronger (Slime, Goblin, Golem, Wraith, Hydra, Dragon), then the Dragon comes back, stronger after every win.
+
 ## Controls
 
 - **Click a stone** then **its neighbour** (left, right, above or below) to swap them.

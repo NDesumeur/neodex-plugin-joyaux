@@ -4,6 +4,10 @@ Un jeu d'alignement de pierres précieuses : échange deux pierres voisines pour
 
 *English version: [README.en.md](README.en.md)*
 
+## Combat contre les monstres (nouveau en 1.2.0)
+
+Un nouveau mode, façon jeu de rôle : on joue chacun son tour contre un monstre sur le même plateau. Les pierres rouges frappent, les vertes soignent, les bleues donnent un bouclier, les autres remplissent la magie ; à 12, un sort de 8 dégâts part tout seul. Créer une bombe ou une étoile donne un tour de plus. Six monstres de plus en plus forts (Gelée, Gobelin, Golem, Spectre, Hydre, Dragon), puis le Dragon revient, plus fort à chaque victoire.
+
 ## Commandes
 
 - **Clic sur une pierre** puis **sur sa voisine** (à gauche, à droite, en haut ou en bas) pour les échanger.
