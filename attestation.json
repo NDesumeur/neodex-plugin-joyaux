@@ -1,9 +1,9 @@
 {
   "pluginId": "neodex.joyaux",
   "repo": "NDesumeur/neodex-plugin-joyaux",
-  "version": "1.1.2",
-  "sha256": "89ea2c72a92028dbe51f71f8efd5b4ef368c3eb816227603365c5a9dce59ef17",
-  "approvedAt": "2026-11-19T23:26:41.162Z",
+  "version": "1.2.0",
+  "sha256": "1bb811647900f56543096eff2e4e92ccd195bffe12e835580cd699c3738b386e",
+  "approvedAt": "2026-11-24T15:56:17.261Z",
   "neobase": ">=4.0.0",
-  "signature": "IsbxL6H8/jfzm3EybQNL0EAzeRQx0vnspuIqawnPk9mftr6O80xCoTOwDk2m/pjP1/tuINvUW+5JW/2pJR2XAA=="
+  "signature": "Ltg4yqW4wQ7CoPLHEiVB1kraEbnd8clXrwrkF272+/dfzCYXQTaVBIT0FLQxIMAdDtU428vRbGvfCgxfD9KKBg=="
 }
