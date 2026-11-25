@@ -1,7 +1,7 @@
 {
   "id": "neodex.joyaux",
   "name": "Joyaux",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": "NDesumeur",
   "description": "Jeu d'alignement : échange deux pierres voisines, au clic ou en glissant, pour en aligner trois ou plus de la même sorte. Elles disparaissent, les autres tombent, et chaque alignement en cascade multiplie les points. 25 coups par partie, un échange inutile ne coûte rien, le plateau se mélange s'il est bloqué, et chaque pierre a sa forme pour se passer des couleurs. Aligne 4 pierres pour une bombe qui explose en 3 × 3, 5 pour une étoile qui efface toute une couleur. Les pierres brillent, le jeu prend la taille de l'écran et passe en plein écran. Nouveau mode Combat : chacun son tour contre six monstres, les pierres rouges frappent, les vertes soignent, les bleues protègent et les autres chargent un sort.",
   "icon": "icon.png",
@@ -22,5 +22,51 @@
   "sdk": "2.1.0",
   "permissions": [
     "storage"
+  ],
+  "succes": [
+    {
+      "id": "premier",
+      "nom": "Première pierre",
+      "texte": "Finir une première partie"
+    },
+    {
+      "id": "s5000",
+      "nom": "Joaillier",
+      "texte": "Marquer 5 000 points en une partie"
+    },
+    {
+      "id": "s20000",
+      "nom": "Trésor royal",
+      "texte": "Marquer 20 000 points en une partie"
+    },
+    {
+      "id": "combat",
+      "nom": "Premier combat",
+      "texte": "Gagner un combat"
+    },
+    {
+      "id": "golem",
+      "nom": "Briseur de golem",
+      "texte": "Battre le Golem"
+    },
+    {
+      "id": "dragon",
+      "nom": "Tueur de dragon",
+      "texte": "Battre le Dragon",
+      "cache": true
+    },
+    {
+      "id": "combats",
+      "nom": "Champion",
+      "texte": "Gagner 25 combats"
+    }
+  ],
+  "records": [
+    {
+      "id": "score",
+      "nom": "Meilleur score",
+      "sens": "haut",
+      "format": "nombre"
+    }
   ]
 }

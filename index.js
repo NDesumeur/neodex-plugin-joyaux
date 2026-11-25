@@ -301,6 +301,9 @@ export default async function (ctx) {
   const saveGames = () => { clearTimeout(gamesTimer); gamesTimer = setTimeout(() => { gamesTimer = null; folder.write('games', games).catch(() => {}); }, 500); };
   const best = (k, v) => { const b = games.best[k]; if (b == null || v > b) { games.best[k] = v; saveGames(); return true; } return false; };
   const gstore = (k, init) => (games[k] ??= init);
+  // les trophées de NeoDex (3.4.8 et plus) : succès et records déclarés dans plugin.json ; sur un NeoDex plus ancien, rien ne se passe
+  const trophy = id => { ctx.games?.unlock(id).catch(() => {}); };
+  const trophyRecord = (id, v) => { if (v != null && Number.isFinite(+v)) ctx.games?.record(id, +v).catch(() => {}); };
 function gameLoop(st, appKey, update, draw) {
   cancelAnimationFrame(st.raf);
   const STEP = 1000 / 60; let acc = 0, last = performance.now();
@@ -483,7 +486,8 @@ cv.onpointerdown = e => {
 };
 cv.onpointermove = e => { if (!jy?.drag || jy.busy) return; const c = jyCell(e); if (c && Math.abs(jy.drag[0] - c[0]) + Math.abs(jy.drag[1] - c[1]) === 1) { jyTry(...jy.drag, ...c); jy.drag = null; } };
 cv.onpointerup = () => { if (jy) jy.drag = null; };
-function jyInfo() { showStats([['Meilleur score', games.best.joyaux || 0], ['Parties', jys.games], ['Combats gagnés', jys.wins], ['Plus loin', jyFoe(jys.foe).name]]); $('jyMode').value = jys.mode; }
+function jyInfo() {
+  setTimeout(jyTrophies); showStats([['Meilleur score', games.best.joyaux || 0], ['Parties', jys.games], ['Combats gagnés', jys.wins], ['Plus loin', jyFoe(jys.foe).name]]); $('jyMode').value = jys.mode; }
 $('jyMode').onchange = () => { jys.mode = $('jyMode').value; saveGames(); jyNew(); $('jyMode').blur(); };
 $('gNew').onclick = () => { jyNew(); $('gNew').blur(); };
 $('gFs').onclick = () => { const box = cv.parentElement; document.fullscreenElement ? document.exitFullscreen() : box.requestFullscreen?.().catch(() => {}); $('gFs').blur(); };
@@ -510,6 +514,13 @@ function jyCheck() {  // vérification : plateau neuf sans alignement et jouable
   return bad.join(' | ') || 'ok';
 }
 { const c = jyCheck(); console.assert(c === 'ok', 'joyaux', c); cv.__jy = {check: jyCheck, st: () => jy, swap: (x, y, a, c) => jyTry(x, y, a, c), again: () => jyNew()}; }
+// les trophées, tirés des statistiques et des records gardés (aussi à l'ouverture : ce qui a été fait avant compte)
+function jyTrophies() {
+  const b = games.best.joyaux, n = JY_FOES.map(f => f[0]), sig = [b, jys.games, jys.wins, jys.foe].join(); if (sig === jyTrophies.sig) return; jyTrophies.sig = sig;
+  trophyRecord('score', b || null);
+  if (jys.games >= 1) trophy('premier'); if (b >= 5000) trophy('s5000'); if (b >= 20000) trophy('s20000'); if (jys.wins >= 1) trophy('combat');
+  if (jys.foe > n.indexOf('Golem')) trophy('golem'); if (jys.foe > n.indexOf('Dragon')) trophy('dragon'); if (jys.wins >= 25) trophy('combats');
+}
 ctx.onOpen(() => { if (!jy) jyNew(); gameLoop(jy, 'joyaux', jyUpdate, jyDraw); jyInfo(); });
 
 }
